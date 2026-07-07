@@ -476,7 +476,7 @@ const indexHTML = `<!DOCTYPE html>
 </head>
 <body>
     <div class="container">
-        <h1>Snake Game</h1>
+        <h1>The Best Snake Game</h1>
         by Tangram Soft
         <div class="score-display">Score: <span id="score">0</span></div>
         <canvas id="gameCanvas" class="gameCanvas" width="400" height="400"></canvas>
