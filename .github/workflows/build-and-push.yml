@@ -33,11 +33,16 @@ jobs:
           # Clone the gitops repo
           git clone https://x-access-token:${{ secrets.GIT_ACCESS_TOKEN }}@github.com/lavalex/snake-gitops.git
           cd snake-gitops
+         
+          # Use a more flexible regex that matches everything after 'image: '
+          sed -i "s|image: .*|image: docker.io/lavalex/snake-game:${{ github.sha }}|g" deployment-game.yaml
           
-          # Update the image tag (assuming the image line is: image: lavalex/snake-game:...)
-          sed -i "s|image: lavalex/snake-game:.*|image: lavalex/snake-game:${{ github.sha }}|g" deployment-game.yaml
-          
-          # Commit and push
-          git add deployment-game.yaml
-          git commit -m "Update image tag to ${{ github.sha }}"
-          git push
+          # Only commit if there are changes
+          if [[ -n $(git status -s) ]]; then
+            git add deployment-game.yaml
+            git commit -m "Update image tag to ${{ github.sha }}"
+            git push
+          else
+            echo "No changes to commit."
+          fi
+
