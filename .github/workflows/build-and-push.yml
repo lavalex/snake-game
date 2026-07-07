@@ -1,0 +1,41 @@
+name: CI Pipeline
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Login to DockerHub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and push image
+        uses: docker/build-push-action@v5
+        with:
+          push: true
+          tags: lavalex/snake-game:${{ github.sha }}
+
+      - name: Update GitOps Repository
+        run: |
+          git config --global user.email "actions@github.com"
+          git config --global user.name "GitHub Actions"
+          
+          # Clone the gitops repo
+          git clone https://x-access-token:${{ secrets.GIT_ACCESS_TOKEN }}@github.com/lavalex/snake-gitops.git
+          cd snake-gitops
+          
+          # Update the image tag (assuming the image line is: image: lavalex/snake-game:...)
+          sed -i "s|image: lavalex/snake-game:.*|image: lavalex/snake-game:${{ github.sha }}|g" deployment-game.yaml
+          
+          # Commit and push
+          git add deployment-game.yaml
+          git commit -m "Update image tag to ${{ github.sha }}"
+          git push
