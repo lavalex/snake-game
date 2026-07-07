@@ -59,10 +59,7 @@ jobs:
           # 2. List tags (excluding 'latest'), sort by creation date (newest first), and skip the first 3
           # We use a temporary file to hold the list of tags to delete
           echo "Fetching tags for $REPO..."
-          TAGS_TO_DELETE=$(curl -s -H "Authorization: Bearer $TOKEN" \
-            "https://hub.docker.com/v2/repositories/$REPO/tags/?page_size=100" | \
-            jq -r '.results[] | select(.name != "latest") | .name' | \
-            sort -r | tail -n +4)
+          TAGS_TO_DELETE=$(curl -s -H "Authorization: Bearer $TOKEN" "https://hub.docker.com/v2/repositories/$REPO/tags/?page_size=100"  | jq -r '.results[]  | .name' | tail -n +4)
           # 3. Delete the tags
           for tag in $TAGS_TO_DELETE; do
             echo "Deleting tag: $tag"
