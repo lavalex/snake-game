@@ -628,7 +628,7 @@ const indexHTML = `<!DOCTYPE html>
                 await loadScores();
                 closeModal();
             } catch (e) {
-                console.error('Error submitting score:', e);
+                console.error('Error when submitting score:', e);
             }
         }
 
