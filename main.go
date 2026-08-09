@@ -17,7 +17,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
-// Define Prometheus Metrics
+// Define Prometheus Metrics alex
 var (
 	applesEatenCounter = promauto.NewCounter(prometheus.CounterOpts{
 		Name: "snake_apples_eaten_total",
