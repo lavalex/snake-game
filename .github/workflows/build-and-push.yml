@@ -17,13 +17,16 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
+      # Updated to include the 'latest' tag
       - name: Build and push image 
         uses: docker/build-push-action@v5
         with:
           context: .
           file: ./Dockerfile  
           push: true
-          tags: lavalex/snake-game:${{ github.sha }}
+          tags: |
+            lavalex/snake-game:${{ github.sha }}
+            lavalex/snake-game:latest
 
       - name: Update GitOps Repository
         run: |
@@ -33,7 +36,7 @@ jobs:
           # Clone the gitops repo
           git clone https://x-access-token:${{ secrets.GIT_ACCESS_TOKEN }}@github.com/lavalex/snake-gitops.git
           cd snake-gitops
-         
+          
           # Use a more flexible regex that matches everything after 'image: '
           sed -i "s|image: .*|image: docker.io/lavalex/snake-game:${{ github.sha }}|g" deployment-game.yaml
           
@@ -56,14 +59,15 @@ jobs:
           TOKEN=$(curl -s -H "Content-Type: application/json" -X POST \
             -d "{\"username\": \"$DOCKER_USERNAME\", \"password\": \"$DOCKER_PASSWORD\"}" \
             https://hub.docker.com/v2/users/login/ | jq -r .token)
+            
           # 2. List tags (excluding 'latest'), sort by creation date (newest first), and skip the first 3
-          # We use a temporary file to hold the list of tags to delete
+          # Updated jq filter to actually exclude the 'latest' tag
           echo "Fetching tags for $REPO..."
-          TAGS_TO_DELETE=$(curl -s -H "Authorization: Bearer $TOKEN" "https://hub.docker.com/v2/repositories/$REPO/tags/?page_size=100"  | jq -r '.results[]  | .name' | tail -n +4)
+          TAGS_TO_DELETE=$(curl -s -H "Authorization: Bearer $TOKEN" "https://hub.docker.com/v2/repositories/$REPO/tags/?page_size=100" | jq -r '.results[] | select(.name != "latest") | .name' | tail -n +4)
+          
           # 3. Delete the tags
           for tag in $TAGS_TO_DELETE; do
             echo "Deleting tag: $tag"
             curl -s -X DELETE -H "Authorization: Bearer $TOKEN" \
               "https://hub.docker.com/v2/repositories/$REPO/tags/$tag/"
           done
-
